@@ -39,7 +39,9 @@ export type GraphicsWebTech =
   | "WebGL"
   | "WebGPU"
   | "WebGPU-Three"
-  | "WebGLThree";
+  | "WebGLThree"
+  | "WebGPU-Orillusion"
+  | "WebGPU-Pixie";
 export let currWebTech: GraphicsWebTech = "SVG-DOM";
 export type DatasetName =
   | "student_dataset"

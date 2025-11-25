@@ -9,6 +9,7 @@ import { initCanvasWebGLThreeJS, redrawWebGLLinesThreeJS } from "./webGL_three";
 import { initCanvasWebGPU, redrawWebGPULines } from "./webGPU";
 import { initCanvasWebGPUThreeJS, redrawWebGPULinesThreeJS } from "./webGPU_Three";
 import { initCanvasWebGPUOrillusion, redrawWebGPULinesOrillusion } from "./webGPU_Orillusion";
+import { initCanvasWebGPUPixie, redrawWebGPULinesPixie } from "./webGPU_Pixie";
 import * as context from "./contextMenu";
 import {
   active,
@@ -528,10 +529,16 @@ export async function setupTechnology(tech: string, parcoords: any) {
       await initCanvasWebGPU();
       break;
     case "WebGPU-Three":
+      recreateCanvas();
       await initCanvasWebGPUThreeJS();
       break;
     case "WebGPU-Orillusion":
+      recreateCanvas();
       await initCanvasWebGPUOrillusion();
+      break;
+    case "WebGPU-Pixie":
+      recreateCanvas();
+      await initCanvasWebGPUPixie(dpr);
       break;
   }
 }
@@ -691,6 +698,14 @@ export function drawChart(content: any[]): void {
           redrawWebGPULinesOrillusion(parcoords.newDataset, parcoords);
         })
         .catch((err) => console.error("WebGPU-Orillusion init failed:", err));
+      break;
+
+    case "WebGPU-Pixie":
+      initCanvasWebGPUPixie(dpr)
+        .then(() => {
+          redrawWebGPULinesPixie(parcoords.newDataset, parcoords);
+        })
+        .catch((err) => console.error("WebGPU-Pixie init failed:", err));
       break;
   }
 
