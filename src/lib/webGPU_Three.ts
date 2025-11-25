@@ -62,7 +62,6 @@ export function redrawWebGPULinesThreeJS(dataset: any[], parcoords: any) {
 
     const color = active ? [0.5, 0.75, 0.84] : [0.92, 0.92, 0.92]; // RGB normalized
 
-    // convert polyline to segments like we do in webgl
     for (let i = 0; i < pts.length - 3; i += 3) {
       positions.set(pts.slice(i, i + 3), offset * 3);
       colors.set(color, offset * 3);
