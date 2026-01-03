@@ -32,14 +32,21 @@ const HOVER_THRESHOLD = 5;
 let currentParcoords: any = null;
 
 export function disposeWebGPUThreeJS() {
-  const plotArea = document.getElementById("plotArea") as HTMLDivElement;
+  // Clean up event listeners
 
+  const plotArea = document.getElementById("plotArea") as HTMLDivElement;
   plotArea.removeEventListener("mousemove", onMouseMove);
   plotArea.removeEventListener("mouseenter", onMouseEnter!);
   plotArea.removeEventListener("mouseleave", onMouseLeave!);
 
+  // Reset hover state
+  hoveredLine = null;
+  onLineHover(false);
+
+  // Clear labels
   clearDataPointLabels();
 
+  // Dispose of Three.js objects
   for (const [_, line] of lineObjects) {
     if (scene) scene.remove(line);
     line.geometry.dispose();
@@ -47,6 +54,7 @@ export function disposeWebGPUThreeJS() {
   lineObjects.clear();
   lineDataMap.clear();
 
+  // Dispose materials
   lineMaterial?.dispose();
   inactiveLineMaterial?.dispose();
   hoverLineMaterial?.dispose();
@@ -65,13 +73,13 @@ export function disposeWebGPUThreeJS() {
   }
 
   camera = null;
-  hoveredLine = null;
   hoveredLineOriginalMaterial = null;
   currentParcoords = null;
   isInitialized = false;
 }
 
 export async function initCanvasWebGPUThreeJS() {
+  // Dispose existing resources if re-initializing
   disposeWebGPUThreeJS();
 
   const width = canvasEl.clientWidth;
@@ -97,13 +105,15 @@ export async function initCanvasWebGPUThreeJS() {
   }
 
   lineMaterial = new THREE.Line2NodeMaterial({
+    // Colour for active lines is light blue
     color: 0x80bfd6,
     linewidth: 3,
-    worldUnits: false,
-    alphaToCoverage: true,
+    worldUnits: false, // Line width in pixels
+    alphaToCoverage: true, // Enable anti-aliasing
   });
 
   inactiveLineMaterial = new THREE.Line2NodeMaterial({
+    // Colour for inactive lines is light grey
     color: 0xebebeb,
     linewidth: 2,
     worldUnits: false,
@@ -111,6 +121,7 @@ export async function initCanvasWebGPUThreeJS() {
   });
 
   hoverLineMaterial = new THREE.Line2NodeMaterial({
+    // Colour for hovered line is bright red
     color: 0xff3333,
     linewidth: 4,
     worldUnits: false,
@@ -132,6 +143,7 @@ export async function initCanvasWebGPUThreeJS() {
 }
 
 function onMouseMove(event: MouseEvent) {
+  // Update mouse coordinates for raycasting
   if (!renderer || !scene || !camera || !isInitialized) return;
 
   const rect = canvasEl.getBoundingClientRect();
@@ -143,10 +155,12 @@ function onMouseMove(event: MouseEvent) {
 }
 
 function onMouseEnter() {
+  // Set flag to indicate mouse is over canvas
   isMouseOverCanvas = true;
 }
 
 function onMouseLeave() {
+  // Clear flag to indicate mouse has left canvas
   isMouseOverCanvas = false;
   clearHover();
   clearDataPointLabels();
@@ -156,18 +170,23 @@ function onMouseLeave() {
 }
 
 function checkHover() {
+  // Perform raycasting to detect hovered lines
   if (!isMouseOverCanvas || !scene || !camera) return;
 
+  // Update the raycaster with the current mouse position
   raycaster.setFromCamera(mouse, camera);
 
+  // Create an array of line objects to test for intersections
   const lineArray = Array.from(lineObjects.values());
   const intersects = raycaster.intersectObjects(lineArray, false);
 
+  // Handle hover state changes
   if (intersects.length > 0) {
     const closestLine = intersects[0].object as Line2;
 
     if (hoveredLine !== closestLine) {
       clearHover();
+      clearDataPointLabels();
 
       hoveredLine = closestLine;
       hoveredLineOriginalMaterial =
@@ -183,12 +202,9 @@ function checkHover() {
     }
   } else {
     if (hoveredLine) {
-      const data = lineDataMap.get(hoveredLine);
       clearHover();
       clearDataPointLabels();
-      if (data) {
-        onLineHover(false);
-      }
+      onLineHover(false);
     }
   }
 
