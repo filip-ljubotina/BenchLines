@@ -272,7 +272,6 @@ export function redrawWebGPULinesThreeJS(dataset: any[], parcoords: any) {
         geometry,
         active ? lineMaterial! : inactiveLineMaterial!
       );
-      line.computeLineDistances();
 
       lineObjects.set(id, line);
       lineDataMap.set(line, d);
@@ -280,7 +279,6 @@ export function redrawWebGPULinesThreeJS(dataset: any[], parcoords: any) {
     } else {
       const geometry = line.geometry as LineGeometry;
       geometry.setPositions(pts);
-      line.computeLineDistances();
 
       if (line !== hoveredLine) {
         line.material = active ? lineMaterial! : inactiveLineMaterial!;

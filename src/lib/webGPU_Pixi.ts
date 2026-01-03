@@ -7,7 +7,8 @@ let renderer: PIXI.WebGPURenderer | null = null;
 let stage: PIXI.Container | null = null;
 let linesContainer: PIXI.Container | null = null;
 
-const lineGraphics: Map<string, PIXI.Graphics> = new Map();
+let backgroundGraphics: PIXI.Graphics | null = null;
+let hoverGraphics: PIXI.Graphics | null = null;
 
 let hoveredLineId: string | null = null;
 let isMouseOverCanvas = false;
@@ -23,7 +24,14 @@ function disposeWebGPUPixi() {
 
   clearDataPointLabels();
 
-  lineGraphics.clear();
+  if (backgroundGraphics) {
+    backgroundGraphics.destroy();
+    backgroundGraphics = null;
+  }
+  if (hoverGraphics) {
+    hoverGraphics.destroy();
+    hoverGraphics = null;
+  }
 
   if (stage) {
     stage.destroy({ children: true });
@@ -91,6 +99,12 @@ export async function initCanvasWebGPUPixi() {
   linesContainer = new PIXI.Container();
   stage.addChild(linesContainer);
 
+  backgroundGraphics = new PIXI.Graphics();
+  linesContainer.addChild(backgroundGraphics);
+
+  hoverGraphics = new PIXI.Graphics();
+  linesContainer.addChild(hoverGraphics);
+
   createLabelsContainer();
 
   currentParcoords = parcoords;
@@ -105,62 +119,40 @@ export async function initCanvasWebGPUPixi() {
 }
 
 export function redrawWebGPUPixiLines(dataset: any[], parcoords: any) {
-  if (!renderer || !stage || !linesContainer || !dataset) return;
+  if (!renderer || !stage || !linesContainer || !backgroundGraphics || !dataset) return;
 
   currentParcoords = parcoords;
   currentDataset = dataset;
 
-  const usedIds = new Set<string>();
+  backgroundGraphics.clear();
 
   dataset.forEach((d) => {
-    const id = getLineNameCanvas(d);
-    usedIds.add(id);
-
-    const active = lineState[id]?.active ?? true;
+    const active = lineState[getLineNameCanvas(d)]?.active ?? true;
     const pts = getPolylinePoints(d, parcoords);
     if (!pts.length) return;
-
-    let graphics = lineGraphics.get(id);
-
-    if (!graphics) {
-      graphics = new PIXI.Graphics();
-      lineGraphics.set(id, graphics);
-      linesContainer.addChild(graphics);
-    }
 
     const color = active ? 0x0081af : 0xd3d3d3;
     const alpha = active ? 0.5 : 0.4;
     const lineWidth = 2;
 
-    graphics.clear();
-    graphics.moveTo(pts[0][0], pts[0][1]);
+    backgroundGraphics.moveTo(pts[0][0], pts[0][1]);
     for (let i = 1; i < pts.length; i++) {
-      graphics.lineTo(pts[i][0], pts[i][1]);
+      backgroundGraphics.lineTo(pts[i][0], pts[i][1]);
     }
-    graphics.stroke({ width: lineWidth, color, alpha });
+    backgroundGraphics.stroke({ width: lineWidth, color, alpha });
   });
-
-  for (const [id, graphics] of lineGraphics) {
-    if (!usedIds.has(id)) {
-      graphics.destroy();
-      lineGraphics.delete(id);
-    }
-  }
 
   // Reapply hover if any
   if (hoveredLineId) {
-    const graphics = lineGraphics.get(hoveredLineId);
-    if (graphics) {
-      const data = dataset.find(d => getLineNameCanvas(d) === hoveredLineId);
-      if (data) {
-        const pts = getPolylinePoints(data, parcoords);
-        graphics.clear();
-        graphics.moveTo(pts[0][0], pts[0][1]);
-        for (let i = 1; i < pts.length; i++) {
-          graphics.lineTo(pts[i][0], pts[i][1]);
-        }
-        graphics.stroke({ width: 4, color: 0xff3333, alpha: 1 });
+    const data = dataset.find(d => getLineNameCanvas(d) === hoveredLineId);
+    if (data) {
+      const pts = getPolylinePoints(data, parcoords);
+      hoverGraphics.clear();
+      hoverGraphics.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) {
+        hoverGraphics.lineTo(pts[i][0], pts[i][1]);
       }
+      hoverGraphics.stroke({ width: 4, color: 0xff3333, alpha: 1 });
     }
   }
 
@@ -214,15 +206,14 @@ function checkHover(mouseX: number, mouseY: number) {
       if (data) {
         onLineHover(true);
         showDataPointLabels(currentParcoords, data);
-        const graphics = lineGraphics.get(hoveredLineId);
-        if (graphics) {
+        if (hoverGraphics) {
           const pts = getPolylinePoints(data, currentParcoords);
-          graphics.clear();
-          graphics.moveTo(pts[0][0], pts[0][1]);
+          hoverGraphics.clear();
+          hoverGraphics.moveTo(pts[0][0], pts[0][1]);
           for (let i = 1; i < pts.length; i++) {
-            graphics.lineTo(pts[i][0], pts[i][1]);
+            hoverGraphics.lineTo(pts[i][0], pts[i][1]);
           }
-          graphics.stroke({ width: 4, color: 0xff3333, alpha: 1 });
+          hoverGraphics.stroke({ width: 4, color: 0xff3333, alpha: 1 });
         }
       }
     }
@@ -233,21 +224,8 @@ function checkHover(mouseX: number, mouseY: number) {
 
 function clearHover() {
   if (hoveredLineId) {
-    const graphics = lineGraphics.get(hoveredLineId);
-    if (graphics) {
-      const data = currentDataset.find(d => getLineNameCanvas(d) === hoveredLineId);
-      if (data) {
-        const active = lineState[hoveredLineId]?.active ?? true;
-        const pts = getPolylinePoints(data, currentParcoords);
-        graphics.clear();
-        graphics.moveTo(pts[0][0], pts[0][1]);
-        for (let i = 1; i < pts.length; i++) {
-          graphics.lineTo(pts[i][0], pts[i][1]);
-        }
-        const color = active ? 0x0081af : 0xd3d3d3;
-        const alpha = active ? 0.5 : 0.4;
-        graphics.stroke({ width: 2, color, alpha });
-      }
+    if (hoverGraphics) {
+      hoverGraphics.clear();
     }
     hoveredLineId = null;
     onLineHover(false);
