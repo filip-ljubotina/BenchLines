@@ -1,5 +1,5 @@
 import { getLineNameCanvas } from "./brush";
-import { canvasEl, lineState } from "./globals";
+import { canvasEl, lineState, parcoords } from "./globals";
 import { clearDataPointLabels, createLabelsContainer, showDataPointLabels } from "./labelUtils";
 import * as PIXI from "pixi.js"; // Use the main pixi.js package for v8+ with WebGPU support
 
@@ -92,6 +92,9 @@ export async function initCanvasWebGPUPixi() {
   stage.addChild(linesContainer);
 
   createLabelsContainer();
+
+  currentParcoords = parcoords;
+  currentDataset = parcoords.newDataset;
 
   const plotArea = document.getElementById("plotArea") as HTMLDivElement;
   plotArea.addEventListener("mousemove", onMouseMove);

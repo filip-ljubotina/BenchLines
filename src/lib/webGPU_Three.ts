@@ -2,7 +2,7 @@ import * as THREE from "three/webgpu";
 import { Line2 } from "three/examples/jsm/lines/webgpu/Line2.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { getLineNameCanvas } from "./brush";
-import { canvasEl, lineState } from "./globals";
+import { canvasEl, lineState, parcoords } from "./globals";
 import {
   clearDataPointLabels,
   createLabelsContainer,
@@ -88,6 +88,8 @@ export async function initCanvasWebGPUThreeJS() {
   scene = new THREE.Scene();
   camera = new THREE.OrthographicCamera(0, width, height, 0, -1, 1);
 
+  isInitialized = true;
+
   try {
     renderer = new THREE.WebGPURenderer({
       canvas: canvasEl,
@@ -131,6 +133,8 @@ export async function initCanvasWebGPUThreeJS() {
   raycaster.params.Line2 = { threshold: HOVER_THRESHOLD };
 
   createLabelsContainer();
+
+  currentParcoords = parcoords;
 
   const plotArea = document.getElementById("plotArea") as HTMLDivElement;
   plotArea.addEventListener("mousemove", onMouseMove);
