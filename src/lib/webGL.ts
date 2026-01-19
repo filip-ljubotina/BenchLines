@@ -2,6 +2,11 @@ import { getLineNameCanvas } from "./brush";
 import { canvasEl, drawState, lineState, parcoords, selected } from "./globals";
 import { initHoverDetection, SelectionMode } from "./hover/hover";
 import {
+  clearDataPointLabels,
+  createLabelsContainer,
+  showDataPointLabels,
+} from "./labelUtils";
+import {
   initLineTextureWebGL,
   drawInactiveLinesTexture,
   rasterizeInactiveLinesToCanvas,
@@ -156,6 +161,15 @@ function onHoveredLinesChange(
         hoveredLineIds.add(id);
       }
     });
+    if (hoveredLineIds.size > 0) {
+      const firstActiveHoveredId = Array.from(hoveredLineIds)[0];
+      const data = dataset.find((d) => getLineNameCanvas(d) === firstActiveHoveredId);
+      if (data) {
+        showDataPointLabels(parcoords, data);
+      }
+    } else {
+      clearDataPointLabels();
+    }
   } else {
     selectedLineIds.clear();
     // hoveredIds.forEach((id) => selectedLineIds.add(id));
@@ -219,6 +233,9 @@ export async function initCanvasWebGL(dataset: any[], parcoords: any) {
   // Create and initialize overlay canvas
   overlayCanvasEl = createOverlayCanvas();
   initOverlayWebGL();
+
+  // Create labels container
+  createLabelsContainer();
 
   // create and intiialize the background texture
   // inactiveLinesCanvas = document.createElement("canvas");
