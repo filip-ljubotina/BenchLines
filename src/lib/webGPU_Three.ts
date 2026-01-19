@@ -4,6 +4,7 @@ import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import { getLineNameCanvas } from "./brush";
 import { canvasEl, drawState, lineState, parcoords } from "./globals";
 import { initHoverDetection, SelectionMode } from "./hover/hover";
+import { initLineTextureWebGL, drawInactiveLinesTexture, rasterizeInactiveLinesToCanvas } from "./lineTexture";
 import {
   clearDataPointLabels,
   createLabelsContainer,
@@ -24,6 +25,10 @@ let selectedLineIds: Set<string> = new Set();
 let dataset: any[] = [];
 let isInitialized = false;
 let currentParcoords: any = null;
+
+// Background canvas
+let inactiveLinesCanvas: HTMLCanvasElement;
+let bgGlCanvas: HTMLCanvasElement | null = null;
 
 export function disposeWebGPUThreeJS() {
   const plotArea = document.getElementById("plotArea") as HTMLDivElement;
@@ -59,7 +64,7 @@ export function disposeWebGPUThreeJS() {
   isInitialized = false;
 }
 
-export async function initCanvasWebGPUThreeJS() {
+export async function initCanvasWebGPUThreeJS(dataset: any[], parcoords: any) {
   disposeWebGPUThreeJS();
   const width = canvasEl.clientWidth;
   const height = canvasEl.clientHeight;
@@ -102,11 +107,54 @@ export async function initCanvasWebGPUThreeJS() {
     worldUnits: false,
     alphaToCoverage: true,
   });
+
+  //create background lines image
+  inactiveLinesCanvas = document.createElement("canvas");
+  inactiveLinesCanvas.width = canvasEl.width;
+  inactiveLinesCanvas.height = canvasEl.height;
+  inactiveLinesCanvas.style.position = "absolute";
+  inactiveLinesCanvas.style.top = canvasEl.style.top;
+  inactiveLinesCanvas.style.left = canvasEl.style.left;
+  inactiveLinesCanvas.style.pointerEvents = "none";
+  inactiveLinesCanvas.style.width = canvasEl.style.width;
+  inactiveLinesCanvas.style.height = canvasEl.style.height;
+
+  // Insert behind the main canvas
+  canvasEl.parentNode?.insertBefore(inactiveLinesCanvas, canvasEl);
+
+  // initLineTextureWebGL(bgGlCanvas);
+  // drawInactiveLinesTexture(dataset, parcoords);
+  redrawWebGPUThreeBackgroundLines(dataset, parcoords);
+
   createLabelsContainer();
   await initHoverDetection(parcoords, onHoveredLinesChange);
   setupCanvasClickHandling();
   isInitialized = true;
   return renderer;
+}
+
+export function redrawWebGPUThreeBackgroundLines(dataset: any[], parcoords: any) {
+  if (!inactiveLinesCanvas) {
+    console.warn("Inactive background canvas not initialized");
+    return;
+  }
+
+  const w = inactiveLinesCanvas.width;
+  const h = inactiveLinesCanvas.height;
+
+  // Create the offscreen WebGL canvas once
+  if (!bgGlCanvas) {
+    bgGlCanvas = document.createElement("canvas");
+    bgGlCanvas.width = w;
+    bgGlCanvas.height = h;
+  }
+
+  // Initialize WebGL and draw the inactive lines
+  initLineTextureWebGL(bgGlCanvas);
+  drawInactiveLinesTexture(dataset, parcoords);
+
+  // Rasterize result into the 2D background canvas
+  rasterizeInactiveLinesToCanvas(inactiveLinesCanvas);
 }
 
 function updateLineMaterials() {
@@ -208,6 +256,10 @@ export function redrawWebGPULinesThreeJS(newDataset: any[], parcoords: any) {
   const usedIds = new Set<string>();
   dataset.forEach((d, index) => {
     const id = getLineNameCanvas(d);
+    const active = lineState[id]?.active ?? true;
+    if (!active) {
+      return;
+    }
     usedIds.add(id);
     const pts = getPolylinePoints(d, parcoords);
     let line = lineObjects.get(id);

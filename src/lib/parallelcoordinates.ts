@@ -13,8 +13,8 @@ import {
   redrawWebGLLines,
   redrawWebGLBackgroundLines,
 } from "./webGL";
-import { initCanvasWebGLThreeJS, redrawWebGLLinesThreeJS } from "./webGL_three";
-import { initCanvasWebGLPixiJS, redrawWebGLLinesPixiJS, destroyPixiRenderer, initHoverDetectionPixiJS } from "./webGL_pixi";
+import { initCanvasWebGLThreeJS, redrawWebGLLinesThreeJS, redrawWebGLThreeBackgroundLines } from "./webGL_three";
+import { initCanvasWebGLPixiJS, redrawWebGLLinesPixiJS, destroyPixiRenderer, initHoverDetectionPixiJS, redrawWebGLPixiBackgroundLines } from "./webGL_pixi";
 import {
   initCanvasWebGPU,
   redrawWebGPUBackgroundLines,
@@ -23,9 +23,10 @@ import {
 import {
   initCanvasWebGPUThreeJS,
   redrawWebGPULinesThreeJS,
+  redrawWebGPUThreeBackgroundLines
 } from "./webGPU_Three";
 // import { initCanvasWebGPUOrillusion, redrawWebGPULinesOrillusion } from "./webGPU_Orillusion";
-import { initCanvasWebGPUPixi, redrawWebGPUPixiLines } from "./webGPU_Pixi";
+import { initCanvasWebGPUPixi, redrawWebGPUPixiLines, redrawWebGPUPixiBackgroundLines } from "./webGPU_Pixi";
 import * as context from "./contextMenu";
 import {
   active,
@@ -525,24 +526,24 @@ export function redrawBackgroundPolylines(dataset: any[], parcoords: any) {
     case "WebGL":
       redrawWebGLBackgroundLines(dataset, parcoords);
       break;
-    // case "WebGLThree":
-    //   redrawWebGLLinesThreeJS(dataset, parcoords);
-    //   break;
-    // // case "WebGLPixi":
-    // //   redrawWebGLLinesPixiJS(dataset, parcoords);
-    // //   break;
+    case "Three WebGL":
+      redrawWebGLThreeBackgroundLines(dataset, parcoords);
+      break;
+    case "Pixi WebGL":
+      redrawWebGLLinesPixiJS(dataset, parcoords);
+      break;
     case "WebGPU":
       redrawWebGPUBackgroundLines(dataset, parcoords);
       break;
-    // case "WebGPU-Three":
-    //   redrawWebGPULinesThreeJS(dataset, parcoords);
-    //   break;
+    case "Three WebGPU":
+      redrawWebGPULinesThreeJS(dataset, parcoords);
+      break;
     // // case "WebGPU-Orillusion":
     // //   redrawWebGPULinesOrillusion(dataset, parcoords);
     // //   break;
-    // case "WebGPU-Pixi":
-    //   redrawWebGPUPixiLines(dataset, parcoords);
-    //   break;
+    case "Pixi WebGPU":
+      redrawWebGPUPixiLines(dataset, parcoords);
+      break;
   }
 }
 
@@ -578,7 +579,7 @@ export async function setupTechnology(
       break;
     case "WebGLPixi":
       recreateCanvas();
-      await initCanvasWebGLPixiJS();
+      await initCanvasWebGLPixiJS(dataset, parcoords);
       break;
     case "WebGPU":
       recreateCanvas();
@@ -586,7 +587,7 @@ export async function setupTechnology(
       break;
     case "WebGPU-Three":
       recreateCanvas();
-      await initCanvasWebGPUThreeJS();
+      await initCanvasWebGPUThreeJS(dataset, parcoords);
       break;
     // case "WebGPU-Orillusion":
     //   recreateCanvas();
@@ -594,7 +595,7 @@ export async function setupTechnology(
     //   break;
     case "WebGPU-Pixi":
       recreateCanvas();
-      await initCanvasWebGPUPixi();
+      await initCanvasWebGPUPixi(dataset, parcoords);
       break;
   }
 }
@@ -734,7 +735,7 @@ export function drawChart(content: any[]): void {
         .catch((err) => console.error("WebGLThree init failed:", err));
       break;
     case "Pixi WebGL":
-      initCanvasWebGLPixiJS()
+      initCanvasWebGLPixiJS(parcoords.newDataset, parcoords)
         .then(() => {
           redrawWebGLLinesPixiJS(parcoords.newDataset, parcoords);
           return initHoverDetectionPixiJS(parcoords);
@@ -751,14 +752,14 @@ export function drawChart(content: any[]): void {
         .catch((err) => console.error("WebGPU init failed:", err));
       break;
     case "Three WebGPU":
-      initCanvasWebGPUThreeJS()
+      initCanvasWebGPUThreeJS(parcoords.newDataset, parcoords)
         .then(() => {
           redrawWebGPULinesThreeJS(parcoords.newDataset, parcoords);
         })
         .catch((err) => console.error("WebGPU-Three init failed:", err));
       break;
     case "Pixi WebGPU":
-      initCanvasWebGPUPixi()
+      initCanvasWebGPUPixi(parcoords.newDataset, parcoords)
         .then(() => {
           redrawWebGPUPixiLines(parcoords.newDataset, parcoords);
         })
