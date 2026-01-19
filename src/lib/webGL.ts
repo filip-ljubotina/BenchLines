@@ -2,11 +2,6 @@ import { getLineNameCanvas } from "./brush";
 import { canvasEl, drawState, lineState, parcoords, selected } from "./globals";
 import { initHoverDetection, SelectionMode } from "./hover/hover";
 import {
-  clearDataPointLabels,
-  createLabelsContainer,
-  showDataPointLabels,
-} from "./labelUtils";
-import {
   initLineTextureWebGL,
   drawInactiveLinesTexture,
   rasterizeInactiveLinesToCanvas,
@@ -42,7 +37,6 @@ let overlayResolutionLoc: WebGLUniformLocation;
 let hoveredLineIds: Set<string> = new Set();
 let selectedLineIds: Set<string> = new Set();
 let dataset: any[] = [];
-let currentParcoords: any = null;
 
 // Vertex and fragment shaders
 const vertexShaderSrc = `
@@ -129,8 +123,7 @@ function initOverlayWebGL() {
   overlayProgram = createProgram(overlayGl, vShader, fShader);
 
   overlayGl.viewport(0, 0, overlayCanvasEl.width, overlayCanvasEl.height);
-  overlayGl.enable(overlayGl.BLEND);
-  overlayGl.blendFunc(overlayGl.SRC_ALPHA, overlayGl.ONE_MINUS_SRC_ALPHA);
+  overlayGl.disable(overlayGl.BLEND);
 
   // Persistent buffers for overlay
   overlayVertexBuffer = overlayGl.createBuffer();
@@ -163,14 +156,6 @@ function onHoveredLinesChange(
         hoveredLineIds.add(id);
       }
     });
-    if (hoveredIds.length > 0) {
-      const data = dataset.find((d) => getLineNameCanvas(d) === hoveredIds[0]);
-      if (data) {
-        showDataPointLabels(currentParcoords, data);
-      }
-    } else {
-      clearDataPointLabels();
-    }
   } else {
     selectedLineIds.clear();
     // hoveredIds.forEach((id) => selectedLineIds.add(id));
@@ -214,8 +199,7 @@ export async function initCanvasWebGL(dataset: any[], parcoords: any) {
   program = createProgram(gl, vShader, fShader);
 
   gl.viewport(0, 0, canvasEl.width, canvasEl.height);
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.disable(gl.BLEND);
 
   // Persistent buffers
   vertexBuffer = gl.createBuffer();
@@ -267,9 +251,6 @@ export async function initCanvasWebGL(dataset: any[], parcoords: any) {
 
   await initHoverDetection(parcoords, onHoveredLinesChange);
   setupCanvasClickHandling();
-
-  createLabelsContainer();
-  currentParcoords = parcoords;
 
   return gl;
 }
@@ -384,7 +365,6 @@ function redrawHoverOverlay() {
     0
   );
 
-  overlayGl.lineWidth(4);
   overlayGl.drawArrays(overlayGl.LINES, 0, vertexData.length / 2);
 }
 
@@ -413,8 +393,8 @@ export function redrawWebGLLines(newDataset: any[], parcoords: any) {
     if (pts.length < 2) continue;
 
     const color = active
-      ? [128 / 255, 191 / 255, 214 / 255, 1]
-      : [235 / 255, 235 / 255, 235 / 255, 1];
+      ? [128 / 255, 192 / 255, 215 / 255, 1]
+      : [234 / 255, 234 / 255, 234 / 255, 1];
 
     // Convert polyline to line segments for LINES
     for (let i = 0; i < pts.length - 1; i++) {
@@ -436,7 +416,6 @@ export function redrawWebGLLines(newDataset: any[], parcoords: any) {
   gl.bufferData(gl.ARRAY_BUFFER, colorData, gl.DYNAMIC_DRAW);
   gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, 0, 0);
 
-  gl.lineWidth(3);
   gl.drawArrays(gl.LINES, 0, vertexData.length / 2);
 
   // Redraw the hover overlay with current hovered lines
@@ -445,12 +424,4 @@ export function redrawWebGLLines(newDataset: any[], parcoords: any) {
 
 export function getSelectedIds(): Set<string> {
   return selectedLineIds;
-}
-
-export function disposeWebGL() {
-  clearDataPointLabels();
-  hoveredLineIds.clear();
-  selectedLineIds.clear();
-  dataset = [];
-  currentParcoords = null;
 }

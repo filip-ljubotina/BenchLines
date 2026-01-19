@@ -7,11 +7,6 @@ import {
   parcoords,
 } from "./globals";
 import { initHoverDetection, SelectionMode } from "./hover/hover";
-import {
-  clearDataPointLabels,
-  createLabelsContainer,
-  showDataPointLabels,
-} from "./labelUtils";
 // the backgrounds are generated using webgl
 import {
   initLineTextureWebGL,
@@ -30,7 +25,6 @@ let bgGlCanvas: HTMLCanvasElement | null = null; // persistent canvas (offscreen
 let hoveredLineIds: Set<string> = new Set();
 let selectedLineIds: Set<string> = new Set();
 let dataset: any[] = [];
-let currentParcoords: any = null;
 
 function getPolylinePoints(d: any, parcoords: any): [number, number][] {
   const pts: [number, number][] = [];
@@ -72,14 +66,6 @@ function onHoveredLinesChange(
         hoveredLineIds.add(id);
       }
     });
-    if (hoveredIds.length > 0) {
-      const data = dataset.find((d) => getLineNameCanvas(d) === hoveredIds[0]);
-      if (data) {
-        showDataPointLabels(currentParcoords, data);
-      }
-    } else {
-      clearDataPointLabels();
-    }
   } else {
     selectedLineIds.clear();
     // hoveredIds.forEach((id) => selectedLineIds.add(id));
@@ -133,19 +119,18 @@ function redrawHoverOverlay() {
 
     overlayCtx.lineWidth = 2;
     overlayCtx.strokeStyle = isSelected
-      ? "rgba(255, 128, 0, 1.0)"
-      : "rgba(255, 51, 51, 1.0)"; // Red for hovered
+      ? "rgba(255, 128, 0, 0.98)"
+      : "rgba(255, 0, 0, 0.8)"; // Red for hovered
 
     overlayCtx.stroke();
   }
 }
 
 export function redrawCanvasLines(newDataset: any, parcoords: any) {
+  if (!ctx || !canvasEl || !newDataset) return;
+
   // Store dataset for overlay use
   dataset = newDataset;
-  currentParcoords = parcoords;
-
-  if (!ctx || !canvasEl || !newDataset) return;
 
   ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
 
@@ -163,8 +148,8 @@ export function redrawCanvasLines(newDataset: any, parcoords: any) {
 
     ctx.lineWidth = 2;
     ctx.strokeStyle = active
-      ? "rgba(128, 191, 214, 1.0)" // active
-      : "rgba(235, 235, 235, 1.0)"; // inactive (faded)
+      ? "rgba(0,129,175,0.5)" // active
+      : "rgba(211,211,211,0.4)"; // inactive (faded)
 
     ctx.stroke();
   }
@@ -178,7 +163,6 @@ export async function initCanvas2D(
   dataset: any[],
   parcoords: any
 ) {
-  currentParcoords = parcoords;
   ctx = canvasEl.getContext("2d")!;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // 2D only
 
@@ -201,8 +185,6 @@ export async function initCanvas2D(
   // Insert behind the main canvas
   canvasEl.parentNode?.insertBefore(inactiveLinesCanvas, canvasEl);
   redrawCanvas2DBackgroundLines(dataset, parcoords);
-
-  createLabelsContainer();
 
   await initHoverDetection(parcoords, onHoveredLinesChange);
   setupCanvasClickHandling();
