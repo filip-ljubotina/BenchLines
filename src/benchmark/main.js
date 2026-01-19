@@ -549,7 +549,7 @@ export function generateDropDownForHoverTech() {
   const gpuAvailable = "gpu" in navigator;
 
   // If GPU not available, force JS
-  if (!gpuAvailable && getHoverTechHelper() === "GPU") {
+  if (!gpuAvailable && getHoverTechHelper() === "WebGPU") {
     setHoverTechHelper("JS");
   }
 
@@ -567,15 +567,15 @@ export function generateDropDownForHoverTech() {
     select.title = "GPU not available - using JS fallback";
   }
 
-  ["GPU", "JS"].forEach(function(value) {
+  ["WebGPU", "JS"].forEach(function(value) {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = value;
 
     // Disable GPU option if not available
-    if (value === "GPU" && !gpuAvailable) {
+    if (value === "WebGPU" && !gpuAvailable) {
       option.disabled = true;
-      option.textContent = "GPU (unavailable)";
+      option.textContent = "WebGPU (unavailable)";
     }
 
     if (value === getHoverTechHelper()) option.selected = true;

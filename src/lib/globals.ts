@@ -57,8 +57,8 @@ export type DatasetName =
 export let currDataset: DatasetName = "student_dataset";
 export const lineState: Record<string, { active: boolean }> = {};
 export let activeTool = "line";
-export type HoverTech = "GPU" | "JS";
-export let hoverTech: HoverTech = "GPU";
+export type HoverTech = "WebGPU" | "JS";
+export let hoverTech: HoverTech = "WebGPU";
 export const drawState: DrawState = {
   isDrawing: false,
   wasDrawing: false,

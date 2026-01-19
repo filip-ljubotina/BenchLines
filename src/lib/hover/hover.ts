@@ -32,7 +32,7 @@ const config: HoverDetectionConfig = { ...DEFAULT_CONFIG };
 
 function createBackend(): IHoverDetectionBackend {
   const gpuBackend = new GPUHoverBackend();
-  if (gpuBackend.isAvailable() && hoverTech === "GPU") {
+  if (gpuBackend.isAvailable() && hoverTech === "WebGPU") {
     console.log("[HoverDetection] Using GPU backend");
     return gpuBackend;
   }
