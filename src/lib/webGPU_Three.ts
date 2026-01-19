@@ -136,9 +136,14 @@ function onHoveredLinesChange(
 ) {
   if (selectionMode === "hover") {
     hoveredLineIds.clear();
-    hoveredIds.forEach((id) => hoveredLineIds.add(id));
-    if (hoveredIds.length > 0) {
-      const data = dataset.find((d) => getLineNameCanvas(d) === hoveredIds[0]);
+    hoveredIds.forEach((id) => {
+      if (!lineState[id] || lineState[id].active) {
+        hoveredLineIds.add(id);
+      }
+    });
+    if (hoveredLineIds.size > 0) {
+      const firstActiveHoveredId = Array.from(hoveredLineIds)[0];
+      const data = dataset.find((d) => getLineNameCanvas(d) === firstActiveHoveredId);
       if (data) {
         showDataPointLabels(currentParcoords, data);
       }
@@ -147,7 +152,11 @@ function onHoveredLinesChange(
     }
   } else {
     selectedLineIds.clear();
-    hoveredIds.forEach((id) => selectedLineIds.add(id));
+    hoveredIds.forEach((id) => {
+      if (!lineState[id] || lineState[id].active) {
+        selectedLineIds.add(id);
+      }
+    });
   }
   updateLineMaterials();
   if (renderer && scene && camera) {
