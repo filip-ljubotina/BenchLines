@@ -82,8 +82,9 @@ function onHoveredLinesChange(
         hoveredLineIds.add(id);
       }
     });
-    if (hoveredIds.length > 0) {
-      const data = dataset.find((d) => getLineNameCanvas(d) === hoveredIds[0]);
+    if (hoveredLineIds.size > 0) {
+      const firstActiveHoveredId = Array.from(hoveredLineIds)[0];
+      const data = dataset.find((d) => getLineNameCanvas(d) === firstActiveHoveredId);
       if (data) {
         showDataPointLabels(currentParcoords, data);
       }
