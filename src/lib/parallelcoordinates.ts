@@ -65,7 +65,7 @@ import {
 import * as helper from "./helper";
 import * as api from "./helperApiFunc";
 import * as icon from "./icons/icons";
-import * as toolbar from "./toolbar";
+// import * as toolbar from "./toolbar";
 import * as utils from "./utils";
 import { updateLineDataBuffer } from "./hover/hover";
 
@@ -671,7 +671,7 @@ export function drawChart(content: any[]): void {
     .style("justify-content", "flex-start")
     .style("margin", "1.2rem 0 0 1rem");
 
-  toolbar.createToolbar(parcoords.newDataset);
+  // toolbar.createToolbar(parcoords.newDataset);
 
   // plot area
   const plot = chartWrapper

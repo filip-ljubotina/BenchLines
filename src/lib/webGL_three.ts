@@ -153,7 +153,7 @@ export function redrawWebGLThreeBackgroundLines(dataset, parcoords){
     // Initialize WebGL and draw the inactive lines
     initLineTextureWebGL(bgGlCanvas);
 
-    drawInactiveLinesTexture(dataset, parcoords);
+    drawInactiveLinesTexture(dataset, parcoords, inactiveLinesCanvas);
   
     // Rasterize result into the 2D background canvas
     rasterizeInactiveLinesToCanvas(inactiveLinesCanvas);
