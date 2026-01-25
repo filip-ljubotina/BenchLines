@@ -10,6 +10,7 @@ import {
   createLabelsContainer,
   showDataPointLabels,
 } from "./labelUtils";
+import { initLineTextureWebGL, drawInactiveLinesTexture, rasterizeInactiveLinesToCanvas } from "./lineTexture";
 
 let scene: THREE.Scene | null = null;
 let camera: THREE.OrthographicCamera | null = null;
@@ -25,6 +26,10 @@ let selectedLineIds: Set<string> = new Set();
 let dataset: any[] = [];
 let isInitialized = false;
 let currentParcoords: any = null;
+
+// Background canvas
+let inactiveLinesCanvas: HTMLCanvasElement;
+let bgGlCanvas: HTMLCanvasElement | null = null;
 
 export function disposeWebGLThreeJS() {
   const plotArea = document.getElementById("plotArea") as HTMLDivElement;
@@ -60,13 +65,11 @@ export function disposeWebGLThreeJS() {
   isInitialized = false;
 }
 
-export async function initCanvasWebGLThreeJS(
-  _dataset?: any[],
-  _parcoords?: any
-) {
+export async function initCanvasWebGLThreeJS(dataset: any[], parcoords: any) {
   disposeWebGLThreeJS();
-  const width = canvasEl.clientWidth;
-  const height = canvasEl.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+  const width = canvasEl.clientWidth * dpr;
+  const height = canvasEl.clientHeight * dpr;
 
   scene = new THREE.Scene();
   camera = new THREE.OrthographicCamera(0, width, height, 0, -1, 1);
@@ -103,12 +106,57 @@ export async function initCanvasWebGLThreeJS(
   });
   selectedLineMaterial.resolution.set(width, height);
 
+  //create background lines image
+  inactiveLinesCanvas = document.createElement("canvas");
+  inactiveLinesCanvas.width = canvasEl.clientWidth * dpr;
+  inactiveLinesCanvas.height = canvasEl.clientHeight * dpr;
+  inactiveLinesCanvas.style.position = "absolute";
+  inactiveLinesCanvas.style.top = canvasEl.style.top;
+  inactiveLinesCanvas.style.left = canvasEl.style.left;
+  inactiveLinesCanvas.style.pointerEvents = "none";
+
+  // set CSS size to match client size
+  inactiveLinesCanvas.style.width = `${canvasEl.clientWidth}px`;
+  inactiveLinesCanvas.style.height = `${canvasEl.clientHeight}px`;
+
+  // Insert behind the main canvas
+  canvasEl.parentNode?.insertBefore(inactiveLinesCanvas, canvasEl);
+
+  // initLineTextureWebGL(bgGlCanvas);
+  // drawInactiveLinesTexture(dataset, parcoords);
+  redrawWebGLThreeBackgroundLines(dataset, parcoords);
+
   createLabelsContainer();
   await initHoverDetection(parcoords, onHoveredLinesChange);
   setupCanvasClickHandling();
   isInitialized = true;
 
   return renderer;
+}
+
+export function redrawWebGLThreeBackgroundLines(dataset, parcoords){
+  if (!inactiveLinesCanvas) {
+      console.warn("Inactive background canvas not initialized");
+      return;
+    }
+  
+    const w = inactiveLinesCanvas.width;
+    const h = inactiveLinesCanvas.height;
+  
+    // Create the offscreen WebGL canvas once
+    if (!bgGlCanvas) {
+      bgGlCanvas = document.createElement("canvas");
+      bgGlCanvas.width = w;
+      bgGlCanvas.height = h;
+    }
+  
+    // Initialize WebGL and draw the inactive lines
+    initLineTextureWebGL(bgGlCanvas);
+
+    drawInactiveLinesTexture(dataset, parcoords, inactiveLinesCanvas);
+  
+    // Rasterize result into the 2D background canvas
+    rasterizeInactiveLinesToCanvas(inactiveLinesCanvas);
 }
 
 function updateLineMaterials() {
@@ -191,10 +239,12 @@ function setupCanvasClickHandling() {
 
 function getPolylinePoints(d: any, parcoords: any): number[] {
   const pts: number[] = [];
-  const height = canvasEl.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+  const height = canvasEl.clientHeight * dpr;
+
   parcoords.newFeatures.forEach((name: string) => {
-    const x = parcoords.dragging[name] ?? parcoords.xScales(name);
-    const y = height - parcoords.yScales[name](d[name]);
+    const x = (parcoords.dragging[name] ?? parcoords.xScales(name)) * dpr;
+    const y = height - parcoords.yScales[name](d[name]) * dpr;
     pts.push(x, y, 0);
   });
   return pts;
@@ -210,6 +260,10 @@ export function redrawWebGLLinesThreeJS(newDataset: any[], parcoords: any) {
   const usedIds = new Set<string>();
   dataset.forEach((d, index) => {
     const id = getLineNameCanvas(d);
+    const active = lineState[id]?.active ?? true;
+    if (!active) {
+      return;
+    }
     usedIds.add(id);
     const pts = getPolylinePoints(d, parcoords);
     let line = lineObjects.get(id);

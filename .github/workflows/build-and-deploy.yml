@@ -30,7 +30,7 @@ jobs:
         run: npm install --legacy-peer-deps
 
       - name: Build project
-        run: npm run build -- --base-href /spcd3/
+        run: npm run build -- --base-href /
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

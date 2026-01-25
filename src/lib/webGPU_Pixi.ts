@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 import { getLineNameCanvas } from "./brush";
 import { canvasEl, drawState, lineState, parcoords } from "./globals";
 import { initHoverDetection, SelectionMode } from "./hover/hover";
+import { initLineTextureWebGL, drawInactiveLinesTexture, rasterizeInactiveLinesToCanvas } from "./lineTexture";
 import {
   clearDataPointLabels,
   createLabelsContainer,
@@ -19,6 +20,10 @@ let selectedLineIds: Set<string> = new Set();
 let dataset: any[] = [];
 let isInitialized = false;
 let currentParcoords: any = null;
+
+// Background canvas
+let inactiveLinesCanvas: HTMLCanvasElement;
+let bgGlCanvas: HTMLCanvasElement | null = null;
 
 interface LineStyle {
   color: number;
@@ -81,7 +86,7 @@ export function disposeWebGPUPixi() {
   isInitialized = false;
 }
 
-export async function initCanvasWebGPUPixi() {
+export async function initCanvasWebGPUPixi(dataset: any[], parcoords: any) {
   disposeWebGPUPixi();
   const width = canvasEl.clientWidth;
   const height = canvasEl.clientHeight;
@@ -106,11 +111,54 @@ export async function initCanvasWebGPUPixi() {
   linesContainer = new PIXI.Container();
   linesContainer.sortableChildren = true;
   stage.addChild(linesContainer);
+
+  //create background lines image
+  inactiveLinesCanvas = document.createElement("canvas");
+  inactiveLinesCanvas.width = canvasEl.width;
+  inactiveLinesCanvas.height = canvasEl.height;
+  inactiveLinesCanvas.style.position = "absolute";
+  inactiveLinesCanvas.style.top = canvasEl.style.top;
+  inactiveLinesCanvas.style.left = canvasEl.style.left;
+  inactiveLinesCanvas.style.pointerEvents = "none";
+  inactiveLinesCanvas.style.width = canvasEl.style.width;
+  inactiveLinesCanvas.style.height = canvasEl.style.height;
+
+  // Insert behind the main canvas
+  canvasEl.parentNode?.insertBefore(inactiveLinesCanvas, canvasEl);
+
+  // initLineTextureWebGL(bgGlCanvas);
+  // drawInactiveLinesTexture(dataset, parcoords);
+  redrawWebGPUPixiBackgroundLines(dataset, parcoords);
+
   createLabelsContainer();
   await initHoverDetection(parcoords, onHoveredLinesChange);
   setupCanvasClickHandling();
   isInitialized = true;
   return renderer;
+}
+
+export function redrawWebGPUPixiBackgroundLines(dataset: any[], parcoords: any) {
+  if (!inactiveLinesCanvas) {
+    console.warn("Inactive background canvas not initialized");
+    return;
+  }
+
+  const w = inactiveLinesCanvas.width;
+  const h = inactiveLinesCanvas.height;
+
+  // Create the offscreen WebGL canvas once
+  if (!bgGlCanvas) {
+    bgGlCanvas = document.createElement("canvas");
+    bgGlCanvas.width = w;
+    bgGlCanvas.height = h;
+  }
+
+  // Initialize WebGL and draw the inactive lines
+  initLineTextureWebGL(bgGlCanvas);
+  drawInactiveLinesTexture(dataset, parcoords, inactiveLinesCanvas);
+
+  // Rasterize result into the 2D background canvas
+  rasterizeInactiveLinesToCanvas(inactiveLinesCanvas);
 }
 
 function getLineStyle(id: string): LineStyle {
@@ -245,6 +293,10 @@ export function redrawWebGPUPixiLines(newDataset: any[], parcoords: any) {
   const usedIds = new Set<string>();
   dataset.forEach((d, index) => {
     const id = getLineNameCanvas(d);
+    const active = lineState[id]?.active ?? true;
+    if (!active) {
+      return;
+    }
     usedIds.add(id);
     const pts = getPolylinePoints(d, parcoords);
     let graphics = lineGraphics.get(id);

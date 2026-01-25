@@ -55,29 +55,14 @@ function createProgram(gl: WebGLRenderingContext, vShader: WebGLShader, fShader:
   return program;
 }
 
-// Initialize WebGL for the texture rendering
-// export function initLineTextureWebGL(canvas: HTMLCanvasElement) {
-//   gl = canvas.getContext("webgl");
-//   if (!gl) throw new Error("WebGL not supported");
-
-//   const vShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
-//   const fShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
-//   program = createProgram(gl, vShader, fShader);
-
-//   gl.viewport(0, 0, canvas.width, canvas.height);
-//   gl.clearColor(0, 0, 0, 0);
-//   gl.clear(gl.COLOR_BUFFER_BIT);
-
-//   vertexBuffer = gl.createBuffer();
-//   colorBuffer = gl.createBuffer();
-//   if (!vertexBuffer || !colorBuffer) throw new Error("Failed to create buffers");
-
-//   resolutionLoc = gl.getUniformLocation(program, "resolution")!;
-// }
-
 export function initLineTextureWebGL(canvas: HTMLCanvasElement) {
   gl = canvas.getContext("webgl", { preserveDrawingBuffer: true });
-  if (!gl) throw new Error("WebGL not supported");
+  if (!gl) {
+    console.warn("WebGL not supported — falling back to Canvas2D");
+
+    gl = null;
+    return;
+  }
 
   const vShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
   const fShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
@@ -96,8 +81,41 @@ export function initLineTextureWebGL(canvas: HTMLCanvasElement) {
   resolutionLoc = gl.getUniformLocation(program, "resolution")!;
 }
 
+// export function rasterizeInactiveLinesToCanvas(targetCanvas: HTMLCanvasElement) {
+//   if (!gl) return;
+
+//   const sourceCanvas = gl.canvas as HTMLCanvasElement;
+//   const w = sourceCanvas.width;
+//   const h = sourceCanvas.height;
+
+//   const pixels = new Uint8Array(w * h * 4);
+//   gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+//   const ctx = targetCanvas.getContext("2d");
+//   if (!ctx) return;
+
+//   const imageData = ctx.createImageData(w, h);
+
+//   // Flip Y (WebGL bottom-left → Canvas top-left)
+//   for (let y = 0; y < h; y++) {
+//     for (let x = 0; x < w; x++) {
+//       const src = ((h - y - 1) * w + x) * 4;
+//       const dst = (y * w + x) * 4;
+
+//       imageData.data[dst]     = pixels[src];
+//       imageData.data[dst + 1] = pixels[src + 1];
+//       imageData.data[dst + 2] = pixels[src + 2];
+//       imageData.data[dst + 3] = pixels[src + 3];
+//     }
+//   }
+
+//   ctx.putImageData(imageData, 0, 0);
+// }
+
 export function rasterizeInactiveLinesToCanvas(targetCanvas: HTMLCanvasElement) {
-  if (!gl) return;
+  if (!gl) {
+    return;
+  }
 
   const sourceCanvas = gl.canvas as HTMLCanvasElement;
   const w = sourceCanvas.width;
@@ -140,7 +158,11 @@ function getPolylinePoints(d: any, parcoords: any, dpr: number): [number, number
 }
 
 // Render inactive lines to the texture
-export function drawInactiveLinesTexture(dataset: any[], parcoords: any) {
+export function drawInactiveLinesTexture(dataset: any[], parcoords: any, targetCanvas: HTMLCanvasElement) {
+  if (!gl) {
+    drawInactiveLinesCanvas2D(dataset, parcoords, targetCanvas);
+    return;
+  }
   if (!gl || !vertexBuffer || !colorBuffer) return;
 
   gl.useProgram(program);
@@ -184,4 +206,38 @@ export function drawInactiveLinesTexture(dataset: any[], parcoords: any) {
   gl.enableVertexAttribArray(gl.getAttribLocation(program, "a_color"));
 
   gl.drawArrays(gl.LINES, 0, vertexData.length / 2);
+}
+
+function drawInactiveLinesCanvas2D(dataset: any[], parcoords: any, targetCanvas: HTMLCanvasElement) {
+  const ctx = targetCanvas.getContext("2d");
+  if (!ctx) return;
+
+  const dpr = window.devicePixelRatio || 1;
+
+  // reset transforms
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+
+  ctx.strokeStyle = "rgba(200,200,200,1)";
+  ctx.lineWidth = 1;
+
+  for (const d of dataset) {
+    const id = getLineNameCanvas(d);
+    if (lineState[id]?.active) continue;
+
+    ctx.beginPath();
+    let first = true;
+    parcoords.newFeatures.forEach((name: string) => {
+      const x = (parcoords.dragging[name] ?? parcoords.xScales(name)) * dpr;
+      const y = parcoords.yScales[name](d[name]) * dpr;
+
+      if (first) {
+        ctx.moveTo(x, y);
+        first = false;
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+    ctx.stroke();
+  }
 }
