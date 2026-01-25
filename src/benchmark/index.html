@@ -32,12 +32,15 @@
 <button class="input-button" id="resetRanges" title="Set Ranges from Data" hidden>Set Ranges from Data</button>
 <button class="input-button" id="resetRoundedRanges" title="Set Ranges to Round Range" hidden>Round Ranges from Data</button>
 <button class="input-button" id="resetAll" title="Reset Plot to Initial State" hidden>Reset</button>
-<div id="hoverTechContainer" ></div>
-<div id="webTechContainer" ></div>
-<div id="datasetContainer" ></div>
-<div id="benchmarkContainer"></div>
-<div class="dropdown-wrapper" id="tool-dropdown">
-  <!-- Trigger -->
+
+
+
+<div class="control-row top-row">
+  <div id="webTechContainer"></div>     
+  <div id="hoverTechContainer"></div>   
+  <div id="datasetContainer"></div>     
+
+  <div class="dropdown-wrapper" id="tool-dropdown">
   <button class="dropdown-trigger" id="tool-trigger" aria-haspopup="true">
     <span id="tool-icon">
       <svg width="10" height="10" stroke="black" fill="none">
@@ -47,7 +50,6 @@
     <span class="chevron">▾</span>
   </button>
 
-  <!-- Dropdown -->
   <div class="dropdown-menu">
     <div class="dropdown-item selected" data-tool="line">
       <span class="check">✓</span>
@@ -59,16 +61,23 @@
       </span>
     </div>
 
-    <div class="dropdown-item" data-tool="rectangle">
+    <div class="dropdown-item" data-tool="box">
       <span class="check">✓</span>
       <span class="label">
-        Rectangle
+        Box
         <svg width="10" height="10" stroke="black" fill="none">
           <rect x="1" y="1" width="8" height="8" />
         </svg>
       </span>
     </div>
   </div>
+  </div>
+</div>
+
+<div class="control-row benchmark-row">
+  <div id="benchmarkContainer"></div>
+</div>
+  
 </div>
 </div>
 

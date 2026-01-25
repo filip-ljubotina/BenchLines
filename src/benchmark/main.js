@@ -95,7 +95,7 @@ document.addEventListener(
     generateDropdownForSelectRecords();
     document.getElementById("border").style.visibility = "visible";
   },
-  false
+  false,
 );
 
 let inputButton = document.getElementById("input");
@@ -485,7 +485,11 @@ function generateDropdownForMove() {
 }
 
 function calcDDBehaviour(dimensionContainer, selectButton) {
-  if (!dimensionContainer || !selectButton || typeof selectButton.getBoundingClientRect !== "function") {
+  if (
+    !dimensionContainer ||
+    !selectButton ||
+    typeof selectButton.getBoundingClientRect !== "function"
+  ) {
     return;
   }
   const dropdownHeight = dimensionContainer.clientHeight;
@@ -561,34 +565,28 @@ export async function generateDropDownForHoverTech() {
 
   container.innerHTML = "";
 
-  // Check GPU availability using a robust helper
   const gpuAvailable = await extensiveWebGPUSupportCheck();
 
-  // If GPU not available, force JS
   if (!gpuAvailable && getHoverTechHelper() === "WebGPU") {
     setHoverTechHelper("JS");
   }
 
-  // Label
   const label = document.createElement("span");
   label.textContent = "Hover:";
   label.style.marginRight = "0.5rem";
 
-  // Dropdown
   const select = document.createElement("select");
 
-  // Disable dropdown if GPU is not available
   if (!gpuAvailable) {
     select.disabled = true;
     select.title = "GPU not available - using JS fallback";
   }
 
-  ["WebGPU", "JS"].forEach(function(value) {
+  ["WebGPU", "JS"].forEach(function (value) {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = value;
 
-    // Disable GPU option if not available
     if (value === "WebGPU" && !gpuAvailable) {
       option.disabled = true;
       option.textContent = "WebGPU (unavailable)";
@@ -598,7 +596,7 @@ export async function generateDropDownForHoverTech() {
     select.appendChild(option);
   });
 
-  select.addEventListener("change", async function(e) {
+  select.addEventListener("change", async function (e) {
     const value = e.target.value;
     setHoverTechHelper(value);
 
@@ -625,7 +623,7 @@ export function generateDropDownForWebTech() {
   container.innerHTML = "";
 
   const label = document.createElement("span");
-  label.textContent = "Technologies:";
+  label.textContent = "Rendering:";
   label.style.marginRight = "0.5rem";
 
   const select = document.createElement("select");
@@ -714,9 +712,6 @@ export function generateBenchmarkInput() {
   currentDisplay.style.marginLeft = "1rem";
   currentDisplay.style.color = "#555";
   let benchmarkData = getBenchmarkData();
-  if (benchmarkData.numOfIterations !== null) {
-    currentDisplay.textContent = `Iterations: ${benchmarkData.numOfIterations}`;
-  }
 
   btn.addEventListener("click", async () => {
     const avg = await runPolylineBenchmark(parseInt(input.value, 10));
@@ -729,17 +724,7 @@ export function generateBenchmarkInput() {
     const container = document.getElementById("benchmarkContainer");
     if (!container) return;
 
-    let info = container.querySelector(".benchmark-info");
-    if (!info) {
-      info = document.createElement("span");
-      info.className = "benchmark-info";
-      info.style.marginLeft = "1rem";
-      container.appendChild(info);
-    }
     benchmarkData = getBenchmarkData();
-    info.textContent =
-      `Iterations: ${benchmarkData.numOfIterations}, ` +
-      `Average draw time: ${avg.toFixed(3)} ms`;
 
     const table = document.querySelector("#pastTestsTable tbody");
 
@@ -979,26 +964,26 @@ function generateModuleForSetFilter() {
       if (min < topLimit) {
         min = topLimit;
         showError(
-          `Min value is smaller than ${getMinValue(filterDimensionData)}.`
+          `Min value is smaller than ${getMinValue(filterDimensionData)}.`,
         );
       }
       if (max > bottomLimit) {
         max = bottomLimit;
         showError(
-          `Max value is bigger than ${getMaxValue(filterDimensionData)}.`
+          `Max value is bigger than ${getMaxValue(filterDimensionData)}.`,
         );
       }
     } else {
       if (min < bottomLimit) {
         min = bottomLimit;
         showError(
-          `Min value is smaller than ${getMinValue(filterDimensionData)}.`
+          `Min value is smaller than ${getMinValue(filterDimensionData)}.`,
         );
       }
       if (max > topLimit) {
         max = topLimit;
         showError(
-          `Max value is bigger than ${getMaxValue(filterDimensionData)}.`
+          `Max value is bigger than ${getMaxValue(filterDimensionData)}.`,
         );
       }
     }
@@ -1087,7 +1072,7 @@ function generateDropdownForRange() {
   container.appendChild(dimensionContainer);
 }
 
-//TODO
+
 function generateModuleForRangeSettings() {
   let section = document.getElementById("bottom-controls");
 
@@ -1108,7 +1093,7 @@ function generateModuleForRangeSettings() {
     rangeDimensionData.length > 25
       ? rangeDimensionData.substr(0, 25) + "..."
       : rangeDimensionData;
-  headerRange.textContent = "Set Range for\r\n" + newText; //.replace(/(\S+\s*){1,3}/g, "$&\n");
+  headerRange.textContent = "Set Range for\r\n" + newText; 
   headerRange.style.whiteSpace = "pre";
   headerRange.style.paddingLeft = 0.5 + "rem";
   headerRange.style.paddingTop = 0.5 + "rem";
@@ -1391,10 +1376,10 @@ function clearPlot() {
   const hideContainer = document.getElementById("hideDimensionContainer");
   const moveContainer = document.getElementById("moDimensionContainer");
   const filterDimensionContainer = document.getElementById(
-    "filtDimensionContainer"
+    "filtDimensionContainer",
   );
   const rangeDimensionContainer = document.getElementById(
-    "ranDimensionContainer"
+    "ranDimensionContainer",
   );
   const selectRecordsContainer = document.getElementById("selRecordsContainer");
 
