@@ -10,7 +10,7 @@ This project is a fork of the original [SPCD3 teaching repository](https://githu
 
 Our fork adapts and extends the original material for the [Information Architecture and Web Usability](https://courses.isds.tugraz.at/iaweb/) course with a focus on WebGPU/WebGL comparisons, performance exploration, and interactive data visualisation techniques.
 
-## Project goals 🎯
+## Project Goals 🎯
 - Provide a clear overview of Canvas2D, SVG-DOM, WebGL, and WebGPU technologies.
 - Compare these technologies in terms of usability, performance, and modern GPU capabilities.
   
@@ -135,4 +135,5 @@ If you use BenchLines in your research, please consider citing us:
   organization = {Graz University of Technology}
 }
 ```
+
 
