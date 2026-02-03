@@ -10,7 +10,7 @@ This project is a fork of the original [SPCD3 teaching repository](https://githu
 
 Our fork adapts and extends the original material for the [Information Architecture and Web Usability](https://courses.isds.tugraz.at/iaweb/) course with a focus on WebGPU/WebGL comparisons, performance exploration, and interactive data visualisation techniques.
 
-## Project goals
+## Project goals 🎯
 - Provide a clear overview of Canvas2D, SVG-DOM, WebGL, and WebGPU technologies.
 - Compare these technologies in terms of usability, performance, and modern GPU capabilities.
   
@@ -22,7 +22,7 @@ The task runner [Gulp](https://gulpjs.com/) is used to automate
 repeatable tasks, and [Rollup](https://rollupjs.org/) is used to bundle and build the library.
 
 
-## Getting Started
+## Getting Started 🚀
 
 ### Prerequisites
 
@@ -79,7 +79,7 @@ equivalent npm script defined in package.json.
 
 **Important:** To run the build, a live web server must be started.
 
-## Usage
+## Usage 
 
 BenchLines is used to benchmark and visualize the performance of various 
 rendering technologies and libraries.
@@ -105,7 +105,7 @@ structure.
 
 
 
-## License
+## License 📃
 
 This project is distributed under the MIT License. See [LICENSE](LICENSE) for
 more information.
@@ -113,15 +113,26 @@ more information.
 
 
 
-## Contributors
+## Contributors 🧑🏻‍💻
 
-- Michael Anderson [michael.anderson@student.tugraz.at](mailto:michael.anderson@student.tugraz.at?subject=BenchLines)  
- PhD Student
+- [Michael Anderson](mailto:michael.anderson@student.tugraz.at?subject=BenchLines): PhD Student
 
-- Jyothish Atheendran [jyothish.atheendran@student.tugraz.at](mailto:jyothish.atheendran@student.tugraz.at?subject=BenchLines)  
- MSc Student
+- [Jyothish Atheendran](https://www.linkedin.com/in/jyothish-a/): MSc Student
 
-- Filip Ljubotina [filip.ljubotina@student.tugraz.at](mailto:filip.ljubotina@student.tugraz.at?subject=BenchLines)  
- Student
+- [Filip Ljubotina](mailto:filip.ljubotina@student.tugraz.at?subject=BenchLines): Student
 
+## Citation 🖋️
+
+If you use BenchLines in your research, please consider citing us:
+
+```
+@software{benchlines,
+  author       = {Anderson, Michael and Atheendran, Jyothish and Ljubotina, Filip},
+  title        = {BenchLines: Benchmarking Interactive Web Graphics for Parallel Coordinates},
+  year         = {2026},
+  url          = {https://github.com/filip-ljubotina/BenchLines},
+  license      = {MIT},
+  organization = {Graz University of Technology}
+}
+```
 
